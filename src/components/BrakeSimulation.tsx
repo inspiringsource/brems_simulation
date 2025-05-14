@@ -31,12 +31,12 @@ const BrakeSimulation: React.FC = () => {
   // Scrolling offset
   const scrollX = useRef(0);
 
-  // p5 setup callback
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setup = (p5: any, canvasParentRef: Element) => {
     p5.createCanvas(900, 250).parent(canvasParentRef);
   };
 
-  // p5 draw callback
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const draw = (p5: any) => {
     p5.background(240);
     const dt = 1 / 60;
