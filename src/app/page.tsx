@@ -1,14 +1,8 @@
-'use client';
-import BrakeSimulation from '@/components/BrakeSimulation';
+// File: src/app/page.tsx
+"use client"; // ← ensure this page itself is a client component
 
+import ClientBrakeSimulation from "../components/ClientBrakeSimulation";
 
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4">
-      <h1 className="text-2xl font-bold mb-4">
-        Avi&apos;s Bremsweg-Simulation
-      </h1>
-      <BrakeSimulation locale="en" />
-    </main>
-  );
+  return <ClientBrakeSimulation locale="en" />;
 }
