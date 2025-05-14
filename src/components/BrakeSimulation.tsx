@@ -1,138 +1,144 @@
-'use client';
+"use client";
 
-import React, { useRef, useState } from 'react';
-import Sketch from 'react-p5';
-import type p5Types from 'p5';
+import type React from "react";
+import { useRef, useState } from "react";
+import Sketch from "react-p5";
 
 const BrakeSimulation: React.FC = () => {
+  // Physics constants
   const frictionCoefficient = 0.7811;
   const gravity = 9.81;
   const mass = 1300; // kg
   const initialSpeedKmh = 240;
-  const initialSpeed = initialSpeedKmh / 3.6;
+  const initialSpeed = initialSpeedKmh / 3.6; // ≈66.67 m/s
   const deceleration = frictionCoefficient * gravity;
-  const brakingDistanceCalculated = (initialSpeed ** 2) / (2 * deceleration);
+  const brakingDistanceCalculated = initialSpeed ** 2 / (2 * deceleration);
 
+  // Visualization settings
   const pixelsPerMeter = 3;
   const carWidth = 50;
   const carHeight = 25;
-  const maxDistance = 1500; // simulation limit
+  const maxDistance = 1500;
 
+  // Simulation state
   const [speed, setSpeed] = useState(0);
   const [position, setPosition] = useState(0);
   const [isBraking, setIsBraking] = useState(false);
-  const [simulationStarted, setSimulationStarted] = useState(false);
+  const [started, setStarted] = useState(false);
   const [brakePosition, setBrakePosition] = useState<number | null>(null);
-  const [simulationEnded, setSimulationEnded] = useState(false);
+  const [ended, setEnded] = useState(false);
 
+  // Scrolling offset
   const scrollX = useRef(0);
 
-  const setup = (p5: p5Types, canvasParentRef: Element) => {
+  // p5 setup callback
+  const setup = (p5: any, canvasParentRef: Element) => {
     p5.createCanvas(900, 250).parent(canvasParentRef);
   };
 
-  const draw = (p5: p5Types) => {
+  // p5 draw callback
+  const draw = (p5: any) => {
     p5.background(240);
     const dt = 1 / 60;
 
-    if (simulationStarted && !simulationEnded) {
+    // Advance simulation if running
+    if (started && !ended) {
       if (!isBraking) {
-        setPosition((prev) => prev + speed * dt);
+        setPosition((pos) => pos + speed * dt);
       } else if (speed > 0) {
-        setPosition((prev) => prev + speed * dt);
-        setSpeed((prev) => Math.max(prev - deceleration * dt, 0));
+        setPosition((pos) => pos + speed * dt);
+        setSpeed((v) => Math.max(v - deceleration * dt, 0));
 
         if (speed <= 0.1) {
           setSpeed(0);
-          setSimulationEnded(true);
+          setEnded(true);
         }
       }
-
       if (position >= maxDistance) {
-        setSimulationEnded(true);
+        setEnded(true);
       }
     }
 
-    // Camera follows car, stops jitter after simulation end
-    const targetScroll = Math.max(0, position * pixelsPerMeter - 100);
-    scrollX.current = simulationEnded ? scrollX.current : targetScroll;
+    // Smooth camera follow until end
+    const target = Math.max(0, position * pixelsPerMeter - 100);
+    if (!ended) scrollX.current = target;
 
-    // Infinite Road
+    // Draw the road
     p5.fill(80);
     p5.rect(-scrollX.current, 150, (maxDistance + 500) * pixelsPerMeter, 100);
 
-    // Skid mark
+    // Draw skid mark if braking started
     if (brakePosition !== null) {
+      const startX = brakePosition * pixelsPerMeter - scrollX.current;
+      const length = position * pixelsPerMeter - scrollX.current - startX;
       p5.fill(0, 0, 0, 150);
-      const skidStartX = brakePosition * pixelsPerMeter - scrollX.current;
-      const skidEndX = position * pixelsPerMeter - scrollX.current;
-      p5.rect(skidStartX, 170, skidEndX - skidStartX, 5);
+      p5.rect(startX, 170, length, 5);
 
       // Brake arrow
-      p5.fill('red');
-      p5.triangle(
-        skidStartX, 140,
-        skidStartX - 5, 130,
-        skidStartX + 5, 130
-      );
-      p5.text('Brake Start', skidStartX - 20, 125);
+      p5.fill("red");
+      p5.triangle(startX, 140, startX - 5, 130, startX + 5, 130);
+      p5.text("Brake Start", startX - 20, 125);
     }
 
-    // Car
+    // Draw car
     const carX = position * pixelsPerMeter - scrollX.current;
     p5.fill(0, 150, 250);
     p5.rect(carX, 150 - carHeight / 2, carWidth, carHeight);
 
-    // Car stopped arrow
-    if (simulationEnded && isBraking && speed === 0) {
-      const stopX = position * pixelsPerMeter - scrollX.current;
-      p5.fill('green');
-      p5.triangle(
-        stopX, 140,
-        stopX - 5, 130,
-        stopX + 5, 130
-      );
-      p5.text('Car Stopped', stopX - 20, 125);
+    // Draw stop arrow if ended
+    if (ended && isBraking && speed === 0) {
+      const stopX = carX;
+      p5.fill("green");
+      p5.triangle(stopX, 140, stopX - 5, 130, stopX + 5, 130);
+      p5.text("Car Stopped", stopX - 20, 125);
     }
 
-    // Display Data Clearly
+    // Overlay text data
     p5.fill(0);
     p5.textSize(13);
-    p5.text(`Speed: ${speed.toFixed(2)} m/s (${(speed * 3.6).toFixed(1)} km/h)`, 10, 20);
+    p5.text(
+      `Speed: ${speed.toFixed(2)} m/s (${(speed * 3.6).toFixed(1)} km/h)`,
+      10,
+      20
+    );
     p5.text(`Position: ${position.toFixed(2)} m`, 10, 40);
-    p5.text(`Friction (μ): ${frictionCoefficient}`, 10, 60);
+    p5.text(`μ (friction): ${frictionCoefficient}`, 10, 60);
     p5.text(`Mass: ${mass} kg`, 10, 80);
     p5.text(
-      `Braking Distance: ${isBraking ? (position - brakePosition!).toFixed(2) : brakingDistanceCalculated.toFixed(2)} m`,
-      10, 100
+      `Braking Dist: ${
+        isBraking
+          ? (position - (brakePosition ?? 0)).toFixed(2)
+          : brakingDistanceCalculated.toFixed(2)
+      } m`,
+      10,
+      100
     );
   };
 
+  // Handlers
   const handleStart = () => {
     setSpeed(initialSpeed);
-    setSimulationStarted(true);
+    setStarted(true);
   };
-
   const handleBrake = () => {
-    if (simulationStarted && !isBraking) {
+    if (started && !isBraking) {
       setBrakePosition(position);
       setIsBraking(true);
     }
   };
-
   const handleRestart = () => {
     setSpeed(0);
     setPosition(0);
     setIsBraking(false);
     setBrakePosition(null);
-    setSimulationStarted(false);
-    setSimulationEnded(false);
+    setStarted(false);
+    setEnded(false);
     scrollX.current = 0;
   };
 
   return (
     <div className="p-4 overflow-x-auto">
-      {!simulationStarted && (
+      {!started && (
         <button
           type="button"
           onClick={handleStart}
@@ -141,7 +147,7 @@ const BrakeSimulation: React.FC = () => {
           Start Simulation
         </button>
       )}
-      {simulationStarted && !simulationEnded && (
+      {started && !ended && (
         <button
           type="button"
           onClick={handleBrake}
@@ -151,7 +157,7 @@ const BrakeSimulation: React.FC = () => {
           Brake Now!
         </button>
       )}
-      {(simulationEnded || simulationStarted) && (
+      {(started || ended) && (
         <button
           type="button"
           onClick={handleRestart}
