@@ -173,6 +173,8 @@ const BrakeSimulation: React.FC<Props> = ({ locale }) => {
 
   return (
     <div className="p-2 overflow-x-auto max-w-full">
+      {/* Avis Bremsweg simulator */}
+      <h2 className="text-lg font-bold mb-2">Avi&apos;s Bremsweg simulator</h2>
       {!started && (
         <button type="button" onClick={handleStart} className="bg-blue-500 text-white px-4 py-2 rounded mb-2 mr-2">
           {t.start}

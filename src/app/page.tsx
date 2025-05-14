@@ -4,5 +4,6 @@
 import ClientBrakeSimulation from "../components/ClientBrakeSimulation";
 
 export default function Home() {
+ 
   return <ClientBrakeSimulation locale="en" />;
 }
