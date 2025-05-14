@@ -166,11 +166,17 @@ const BrakeSimulation: React.FC<Props> = ({ locale }) => {
     }
   };
 
-  const handleRestart = () => {
-    setStarted(false);
-    setIsBraking(false);
-    setEnded(false);
-  };
+const handleRestart = () => {
+  // reset simulation refs and state
+  speedRef.current = 0;
+  posRef.current = 0;
+  brakeAtRef.current = null;
+  scrollX.current = 0;
+  setStarted(false);
+  setIsBraking(false);
+  setEnded(false);
+};
+
 
   return (
     <div className="p-4 overflow-x-auto">
