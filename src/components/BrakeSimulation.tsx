@@ -1,10 +1,59 @@
-"use client";
+'use client';
 
-import type React from "react";
-import { useRef, useState } from "react";
-import Sketch from "react-p5";
+import type React from 'react';
+import { useRef, useState } from 'react';
+import Sketch from 'react-p5';
 
-const BrakeSimulation: React.FC = () => {
+type Locale = 'en' | 'de';
+
+interface BrakeSimulationProps {
+  locale: Locale;
+}
+
+const translations: Record<Locale, {
+  start: string;
+  brake: string;
+  restart: string;
+  speed: string;
+  position: string;
+  friction: string;
+  mass: string;
+  brakingDist: string;
+  brakeStart: string;
+  carStopped: string;
+  unit: { ms: string; kmh: string; m: string; kg: string };
+}> = {
+  en: {
+    start: 'Start Simulation',
+    brake: 'Brake Now!',
+    restart: 'Restart Simulation',
+    speed: 'Speed',
+    position: 'Position',
+    friction: 'μ (friction)',
+    mass: 'Mass',
+    brakingDist: 'Braking Dist',
+    brakeStart: 'Brake Start',
+    carStopped: 'Car Stopped',
+    unit: { ms: 'm/s', kmh: 'km/h', m: 'm', kg: 'kg' },
+  },
+  de: {
+    start: 'Simulation starten',
+    brake: 'Jetzt bremsen!',
+    restart: 'Simulation neu starten',
+    speed: 'Geschwindigkeit',
+    position: 'Position',
+    friction: 'μ (Reibung)',
+    mass: 'Masse',
+    brakingDist: 'Bremsweg',
+    brakeStart: 'Bremsbeginn',
+    carStopped: 'Fahrzeug gestoppt',
+    unit: { ms: 'm/s', kmh: 'km/h', m: 'm', kg: 'kg' },
+  },
+};
+
+const BrakeSimulation: React.FC<BrakeSimulationProps> = ({ locale }) => {
+  const t = translations[locale];
+
   // Physics constants
   const frictionCoefficient = 0.7811;
   const gravity = 9.81;
@@ -48,7 +97,6 @@ const BrakeSimulation: React.FC = () => {
       } else if (speed > 0) {
         setPosition((pos) => pos + speed * dt);
         setSpeed((v) => Math.max(v - deceleration * dt, 0));
-
         if (speed <= 0.1) {
           setSpeed(0);
           setEnded(true);
@@ -75,9 +123,9 @@ const BrakeSimulation: React.FC = () => {
       p5.rect(startX, 170, length, 5);
 
       // Brake arrow
-      p5.fill("red");
+      p5.fill('red');
       p5.triangle(startX, 140, startX - 5, 130, startX + 5, 130);
-      p5.text("Brake Start", startX - 20, 125);
+      p5.text(t.brakeStart, startX - 20, 125);
     }
 
     // Draw car
@@ -88,28 +136,28 @@ const BrakeSimulation: React.FC = () => {
     // Draw stop arrow if ended
     if (ended && isBraking && speed === 0) {
       const stopX = carX;
-      p5.fill("green");
+      p5.fill('green');
       p5.triangle(stopX, 140, stopX - 5, 130, stopX + 5, 130);
-      p5.text("Car Stopped", stopX - 20, 125);
+      p5.text(t.carStopped, stopX - 20, 125);
     }
 
     // Overlay text data
     p5.fill(0);
     p5.textSize(13);
     p5.text(
-      `Speed: ${speed.toFixed(2)} m/s (${(speed * 3.6).toFixed(1)} km/h)`,
+      `${t.speed}: ${speed.toFixed(2)} ${t.unit.ms} (${(speed * 3.6).toFixed(1)} ${t.unit.kmh})`,
       10,
       20
     );
-    p5.text(`Position: ${position.toFixed(2)} m`, 10, 40);
-    p5.text(`μ (friction): ${frictionCoefficient}`, 10, 60);
-    p5.text(`Mass: ${mass} kg`, 10, 80);
+    p5.text(`${t.position}: ${position.toFixed(2)} ${t.unit.m}`, 10, 40);
+    p5.text(`${t.friction}: ${frictionCoefficient}`, 10, 60);
+    p5.text(`${t.mass}: ${mass} ${t.unit.kg}`, 10, 80);
     p5.text(
-      `Braking Dist: ${
+      `${t.brakingDist}: ${
         isBraking
           ? (position - (brakePosition ?? 0)).toFixed(2)
           : brakingDistanceCalculated.toFixed(2)
-      } m`,
+      } ${t.unit.m}`,
       10,
       100
     );
@@ -144,7 +192,7 @@ const BrakeSimulation: React.FC = () => {
           onClick={handleStart}
           className="bg-blue-500 text-white px-4 py-2 rounded mb-4 mr-2"
         >
-          Start Simulation
+          {t.start}
         </button>
       )}
       {started && !ended && (
@@ -154,7 +202,7 @@ const BrakeSimulation: React.FC = () => {
           className="bg-red-500 text-white px-4 py-2 rounded mb-4 mr-2"
           disabled={isBraking}
         >
-          Brake Now!
+          {t.brake}
         </button>
       )}
       {(started || ended) && (
@@ -163,7 +211,7 @@ const BrakeSimulation: React.FC = () => {
           onClick={handleRestart}
           className="bg-gray-500 text-white px-4 py-2 rounded mb-4"
         >
-          Restart Simulation
+          {t.restart}
         </button>
       )}
       <Sketch setup={setup} draw={draw} />
